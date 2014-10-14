@@ -1,5 +1,7 @@
 # namespaced-container (NodeJS)
 
+[![Build Status](https://travis-ci.org/boljen/namespaced-container.svg)](https://travis-ci.org/boljen/namespaced-container)
+
 A container class which allows item-specific as well as namespaced retrieval.
 
 ## Installation
