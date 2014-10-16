@@ -1,5 +1,78 @@
 "use strict";
 
+/**
+ * This is a namespaced container class.
+ *
+ * @param {Object}    cfg - The configuration of the container.
+ * @param {Object}    cfg.root - The root object of the container.
+ * @param {boolean}   cfg.virtual - Whether to allow pockets to operate in a
+ * virtual namespace. By default this is enabled.
+ * @param {function}  cfg.validate - A function which validates the data which
+ * is set to the container. This is great if you have boundaries.
+ * @param {string}    cfg.prefix - The prefix that is applied to namespaces.
+ */
+var Container = function(cfg) {
+  this.obj = cfg.root || {};
+  this.virtual = cfg.virtual || true;
+  this.namespacePrefix = cfg.prefix || '_';
+  this.validate = cfg.validate || function() {return true};
+};
+
+/**
+ * This will set a property to the container.
+ * @param {string}    key  - The key that must be set.
+ * @param {mixed}     value - The value that must be set.
+ */
+Container.prototype.set = function(key, value) {
+
+};
+
+/**
+ * This will attempt to retrieve avalue from the container. If no default return
+ * value is set, it will throw an error.
+ *
+ * @param  {string}   key - The key to return
+ * @param  {mixed}    defaultReturn - The default value to return.
+ * @param  {boolean}  execute - If true, executes the return value.
+ */
+Container.prototpye.get = function(key, defaultReturn, execute) {
+
+};
+
+/**
+ * This will return an object representing the namespace.
+ *
+ * @param {string} namespace - The namespace in which the pocket must operate.
+ * @param {boolean} virtualOverride - Override the global virtual configuration.
+ */
+Container.prototype.getNamespace = function(namespace, virtualOverride) {
+
+};
+
+/**
+ * Delete a single key-value record.
+ * @param  {string} key - The key to delete
+ */
+Container.prototype.delete = function(key) {
+
+};
+
+/**
+ * Delete an entire namespace and all the data inside of it.
+ * @param {string} namespace - The namespace to delete
+ */
+Container.prototype.deleteNamespace = function(namespace) {
+
+};
+
+module.exports = Container;
+
+
+
+
+
+
+
 function validateName(name) {
   if (typeof name !== "string") {
     throw new Error("Name must be a string");
@@ -142,5 +215,3 @@ Container.prototype._parsePocket = function(pocket) {
     return pocket;
   }
 };
-
-module.exports = Container;
