@@ -1,88 +1,154 @@
 var Container = require('./index.js');
 
+Container.defaultPrefix = '_';
+var p = '_';
+
 describe('Container', function() {
 
   describe('basics', function() {
     it('Should exist', function() {
       Container.should.be.instanceOf(Function);
     });
-    it('Should return an instance when calling New()', function() {
-      Container.New().should.be.instanceOf(Container);
-    });
   });
 
-  describe('add', function() {
-    var container;
+  describe('constructor()', function() {
+
+    it('Should construct', function() {
+      var c = new Container({});
+    });
+
+  });
+
+  describe('set()', function() {
+
+    var c, o;
 
     beforeEach(function() {
-      container = new Container();
+      o = {};
+      c = new Container(o);
     });
 
-    it('Should add a function', function() {
-      var fx = function() {};
-      container.add('test', fx);
-      container._fx.test.should.equal(fx);
-      container._fxn['test'].should.equal(fx);
-    });
-
-    it('Should add a namespaced function', function() {
-      var fx =function() {};
-      container.add('test.namespace', fx);
-      container._fx._test.namespace.should.equal(fx);
-      container._fxn['test.namespace'].should.equal(fx);
-      container.add('test.namespace.test', fx);
-      container._fx._test._namespace.test.should.equal(fx);
-      container._fxn['test.namespace.test'].should.equal(fx);
-    });
-
-    it('Should add namespaced function without conflict', function() {
-        var fx = function() {};
-        container.add('test', fx);
-        container.add('test.namespace', fx);
-        container._fx.test.should.equal(fx);
-        container._fx._test.namespace.should.equal(fx);
-    });
-
-  })
-
-  describe('get', function() {
-
-    var container = new Container();
-    container.add('test', function() {});
-
-    it('Should return the function', function() {
-      container.get('test').should.be.instanceOf(Function);
-    });
-
-    it('Should return null if no function', function() {
-      (container.get('testNull') === null).should.be.true;
-    });
-
-    it('Should throw an error if no function and throwError enabled', function() {
-      (function() {container.get('testNull', true)}).should.throw();
+    it('Should set the value', function() {
+      c.set('test', 'test');
+      o.test.should.equal('test');
+      c.set('nested.test', 'test');
+      o[p+'nested'].test.should.equal('test');
     });
 
   });
 
-  describe('getPocket', function() {
+  describe('get()', function() {
 
-    var container = new Container();
-    var fx = function() {};
-    container.add('namespace.test', fx);
-    container.add('namespace.test2', fx);
-    container.add('namespace.ns.test', fx);
+    var o, c;
 
-    it('Should return a copy of all the functions in said pocket', function() {
-      var res = container.getPocket('namespace');
-      res.should.eql({
-        test: fx,
-        'test2': fx,
-        ns: {
-          test: fx
-        }
-      })
+    beforeEach(function() {
+      o = {};
+      c = new Container(o);
     });
 
+    it('Should get the value', function() {
+      o.test = 'test';
+      c.get('test').should.equal('test');
+    });
+
+    it('Should get undefined if not set', function() {
+      (c.get('test') === undefined).should.be.true;
+    });
+
+    it('Should return default value if given', function() {
+      c.get('test', 'default').should.equal('default');
+    });
+
+  });
+
+  describe('delete()', function() {
+    var o, c;
+
+    beforeEach(function() {
+      o = {};
+      o[p+'dummy'] = {
+          data: 'test',
+          otherData: 'test'
+      };
+      c = new Container(o);
+    });
+
+    it('Should delete the value', function() {
+      c.delete('dummy.data');
+      var t = {};
+      t[p+'dummy'] = {
+        otherData:'test'
+      };
+      o.should.eql(t);
+    });
+
+  });
+
+  describe('deleteNamespace()', function() {
+
+    var o, c;
+
+    beforeEach(function() {
+      o = {};
+      o[p+'dummy'] = {
+        data: 'test',
+        testData: 'test',
+      };
+      o[p+'otherDummy'] = {
+        test: 'ok'
+      }
+      c = new Container(o);
+    });
+
+    it('Should delete the namespace', function() {
+      c.deleteNamespace('dummy');
+
+      var t = {};
+      t[p+'otherDummy'] = {
+        test: 'ok'
+      };
+
+      o.should.eql(t);
+    });
+  });
+
+  describe('deleteNamespaceContent()', function() {
+    var o, c;
+
+    beforeEach(function() {
+
+      o = {};
+      o[p+'dummy'] = {
+        data: 'test',
+        testData: 'test',
+      };
+      o[p+'otherDummy'] = {
+        test: 'ok'
+      }
+      c = new Container(o);
+    });
+
+    it('Should delete the namespace content', function() {
+      c.deleteNamespaceContent('dummy');
+
+      var comp = {};
+      comp[p+'dummy'] = {};
+      comp[p+'otherDummy'] ={test:'ok'};
+      o.should.eql(comp);
+    });
+  });
+
+  describe('getObject()', function() {
+    var c, o;
+
+    beforeEach(function() {
+      o = {};
+      c = new Container(o);
+    });
+
+    it('Should return the object', function() {
+      c.getObject().should.equal(o);
+    });
   });
 
 });

@@ -8,7 +8,7 @@ module.exports = function(grunt) {
         options: {
           require:['should'],
         },
-        src: './test/*',
+        src: './test.js',
       },
     },
   });

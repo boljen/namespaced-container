@@ -2,103 +2,175 @@
 
 [![Build Status](https://travis-ci.org/boljen/namespaced-container.svg)](https://travis-ci.org/boljen/namespaced-container)
 
-A container class which allows item-specific as well as namespaced retrieval.
+A class which allows namespaced object manipulation.
 
 ## Installation
 
-    npm install namespaced-container;
+    npm install namespaced-container
 
 ## Basic usage
 
 Creating a new instance is quite simple;
 
     var Container = require('namespaced-container');
-      , container = new Container();
+      , container = new Container({});
 
-Or simply do this:
+      container.set('nested.namespace.testKey', 'testValue');
+      container.get('nested.namespace.testKey');
+      container.delete('nested.namespace.testKey');
+      container.get('nested.namespace.testKey', 'value_if_not_found');
 
-    var container = require('namespaced-container').New();
-
-Adding a task is very straight forward as well. 'something' can be anything you
-want. An object, a function, ...
-
-    container.add('test.nested.item', something);
-
-If you want to get it back out of the container, you're only a get call away:
-
-    something = container.get('test.item', throwErrorBoolean = false);
-
-You can also get a pocket from the container. A pocket is an object representing
-the container at a certain namespace. It's a copy, not a reference, so changes
-to the pocket object or the original container won't influence each other.
-
-    pocket = container.getPocket('test');
-
-In the given example, your pocket would look like this;
-
-    var pocket = {
-      nested:{
-        item: something
-      }
-    }
 
 ## API
 
-    /**
-     * Adds a new element to the container.
-     *
-     * @param {string} name - The name of the element that must be added.
-     * @param {mixed} item - The actual element that must be added
-     */
-    Container.prototype.add = function(name, item)
+### Constructor
 
     /**
-     * Retrieves a new element from the container.
+     * This is a namespaced container class.
      *
-     * @param  {string} name - The name of the element
-     * @param  {boolean} throwError - If explicitly enabled, it will cause this
-     * function call to throw an error if the element could not be found.
-     * @return {element|null}
+     * @param {Object}    root - The root object of the container.
+     * @param {Object}    cfg
+     * @param {function}  cfg.sanitize - Sanitize values function.
+     * @param {string}    cfg.prefix - The prefix that is applied to namespaces.
+     * @param {string}    cfg.separator - The namespace separator.
      */
-    Container.prototype.get = function(name, throwError)
+    var Container = function(root, cfg)
+
+The first thing you need when constructing your container is a root object. This
+root object will typically be a newly created object, but it also allows an
+existing object.
+
+    // new object
+    var c = new Container({})
+
+    // Existing object
+    var obj = {};
+    var c = new Container(obj);
+
+    // Will work, but remember that configuration might affect the naming.
+    c.set('test', 'value');
+    obj.test === 'value';
+
+It also allows [object-pointers](https://www.npmjs.org/package/object-pointer)
+as a root object.
+
+    var obj = {
+      isNew: false
+    };
+    var newObj = {
+      isNew: true
+    };
+
+    // Pointer hooking to the original object
+    var pointer = new ObjectPointer(obj);
+
+    // Container hooking to the pointer
+    var c = new Container(pointer);
+
+    // Container retrieves obj.isNew
+    c.get('test') === false;
+
+    // Changing root object of the pointer
+    pointer.setRoot(newObj);
+
+    // Container retrieves newObj.isNew
+    c.get('test') === true;
+
+Lets take a look at the options (note that these are the default options):
+
+    var container = new Container(yourRootObject, {
+
+      /**
+       * When setting a value, this function will be called. Use this if you
+       * need to have custom value parsing embedded inside the container.
+       */
+      sanitize: function(value) {
+        return value;
+      },
+
+      /**
+       * By default the namespaces are stored inside the root object without a
+       * prefix. This might mean that some namespaces might overlap with keys.
+       * If you want to have equally named keys and nested namespaces, you have
+       * to set a custom prefix here.
+       */
+      prefix: '',
+
+      /**
+       * The separator used when parsing your given string to a namespace array.
+       * You can set this to anything you like. These do not affect the
+       * underlying object, only the way you deal with the container wrapper.
+       */
+      separator: '.',
+
+    });
+
+### Core API
 
     /**
-     * This will open your container at a certain namespace, copy the content of
-     * that namespace into a stand-alone object and return said object. Be careful
-     * with this as this could potentially mess up your garbage collection.
-     *
-     * @param  {string} path - The path that must be returned
-     * @param  {boolean} throwError - If explicitly enabled, it will cause this
-     * function call to throw an error if the path could not be found.
-     * @return {object|null}
+     * This will set a property to the container.
+     * @param {string}    key  - The key that must be set.
+     * @param {mixed}     value - The value that must be set.
      */
-    Container.prototype.getPocket = function(path, throwError)
-
-## Considerations
-
-Avoid doing something like this;
-
-    container.add('test.item', something);
-    container.add('test.item.nested', something);
-
-    container.getPocket('test');
-
-The regular get will keep functioning but getPocket can't handle this. A fix
-would be to add a prefix to every namespace and/or key. These can be given when
-you generate the pocket object.
-
-## Todo
+    Container.prototype.set = function(key, value)
 
     /**
-     * Returns a reference object that works like a regular Container but only in
-     * a given namespace.
+     * This will attempt to retrieve avalue from the container. If no default return
+     * value is set, it will throw an error.
      *
-     * @param {string} path - The path you want to reference
+     * @param  {string}   key - The key to return
+     * @param  {mixed}    defaultReturn - The default value to return.
+     * @param  {boolean}  execute - If true, executes the return value.
      */
-    Container.prototype.getReference = function(path)
+    Container.prototype.get = function(key, defaultReturn, execute)
 
-    // Should be as simple as creating a new Container instance and assigning
-    // the actual namespace object as it's root object.
+    /**
+     * Deletes a key from the container
+     *
+     *
+     * @param  {string} key
+     */
+    Container.prototype.delete = function(key)
+
+    /**
+     * This deletes a namespace from the container. Note that the regular delete
+     * method will also have this effect if you haven't defined a namespace
+     * prefix.
+     *
+     * @param {string} key
+     */
+    Container.prototype.deleteNamespace = function(key)
+
+    /**
+     * This will delete any content inside a namespace. It will simply delete
+     * the namespace and create a new one.
+     *
+     * @param {string} key
+    Container.prototype.deleteNamespaceContent = function(key)
+
+### Utility API
+
+    /**
+     * Returns the root object
+     */
+    Container.prototype.getRoot = function()
+
+    /**
+     * This will return the object on which this container is built.
+     *
+     * Note: It will return the actual object, not the pointer!
+     */
+    Container.prototype.getObject = function()
+
+    /**
+     * This will set the object on which this container is built.
+     * @param {Object|ObjectPointer} obj
+     */
+    Container.prototype.setObject = function(obj)
+
+## Test
+
+    grunt test
 
 ## License
 
